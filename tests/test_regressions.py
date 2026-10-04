@@ -41,6 +41,7 @@ class RegressionTests(unittest.TestCase):
         self.ui.player.setVolume(0)
 
     def tearDown(self):
+        self.ui.record = []  # Do not open a save prompt during fixture cleanup.
         self.ui.close()
         self.app.processEvents()
         self.app.removeTranslator(self.ui.trans)
@@ -61,6 +62,56 @@ class RegressionTests(unittest.TestCase):
         self.ui.OnBtrunButton()
         self.assertEqual(self.ui.state, State.IDLE)
         self.assertTrue(self.ui.btrecord.isEnabled())
+
+    def test_finish_after_pause_preserves_all_events(self):
+        events = [key('A'), key('A', 'up'), key('B'), key('B', 'up')]
+        self.ui.record = events.copy()
+        self.ui.update_state(State.PAUSE_RECORDING)
+        self.ui.OnBtrecordButton()
+        saved = list((self.root / 'scripts').glob('*.json5'))
+        self.assertEqual(len(saved), 1)
+        self.assertEqual(json5.loads(saved[0].read_text(encoding='utf8'))['scripts'], events)
+        self.assertEqual(self.ui.state, State.IDLE)
+
+    def test_keyboard_finish_does_not_trim_real_keys(self):
+        self.ui.record = [key('A'), key('A', 'up')]
+        self.ui.update_state(State.RECORDING)
+        self.ui.OnBtrecordButton()
+        saved = next((self.root / 'scripts').glob('*.json5'))
+        self.assertEqual(len(json5.loads(saved.read_text(encoding='utf8'))['scripts']), 2)
+
+    def test_save_failure_preserves_recording_and_script_list(self):
+        self.ui.record = [key('A'), key('A', 'up')]
+        self.ui.update_state(State.RECORDING)
+        with patch.object(UIFunc.os, 'replace', side_effect=OSError('disk full')):
+            self.assertFalse(self.ui.recordMethod())
+        self.assertEqual(len(self.ui.record), 2)
+        self.assertEqual(self.ui.state, State.PAUSE_RECORDING)
+        self.assertEqual(list((self.root / 'scripts').iterdir()), [])
+        self.assertEqual(self.ui.scripts, [])
+        self.assertTrue(self.ui.recordMethod())
+
+    def test_close_cancel_keeps_recording(self):
+        from unittest.mock import Mock
+        self.ui.record = [key('A')]
+        self.ui.update_state(State.RECORDING)
+        event = Mock()
+        with patch.object(UIFunc.QMessageBox, 'question', return_value=UIFunc.QMessageBox.Cancel):
+            self.ui.closeEvent(event)
+        event.ignore.assert_called_once()
+        self.assertEqual(self.ui.state, State.PAUSE_RECORDING)
+        self.assertFalse(self.ui._closing)
+        self.assertEqual(len(self.ui.record), 1)
+
+    def test_close_save_persists_recording(self):
+        from unittest.mock import Mock
+        self.ui.record = [key('A'), key('A', 'up')]
+        self.ui.update_state(State.RECORDING)
+        event = Mock()
+        with patch.object(UIFunc.QMessageBox, 'question', return_value=UIFunc.QMessageBox.Save):
+            self.ui.closeEvent(event)
+        event.accept.assert_called_once()
+        self.assertEqual(len(list((self.root / 'scripts').glob('*.json5'))), 1)
 
     def test_hotkey_save_cancel_clear_conflict_and_language(self):
         self.ui.OnHotkeyButton(self.ui.hotkey_start)

@@ -8,6 +8,7 @@ import sys
 import threading
 import platform
 import locale
+import tempfile
 import Recorder
 
 from PySide6.QtGui import QTextCursor
@@ -24,6 +25,7 @@ from Util.Paths import to_abs_path, get_assets_path
 from Util.Sound import SoundPlayer
 from Util.RunScriptClass import RunScriptClass
 from Util.Global import State
+from Util.Version import __version__
 from Util.ClickedLabel import Label
 
 
@@ -516,6 +518,22 @@ class UIFunc(QMainWindow, Ui_UIView, QtStyleTools):
             logger.warning('Cannot play notification: {}', exc)
 
     def closeEvent(self, event):
+        if self.state in (State.RECORDING, State.PAUSE_RECORDING) and self.record:
+            # Pause before opening a modal dialog so its clicks are not recorded.
+            if self.state == State.RECORDING:
+                self.pauseRecordMethod()
+            choice = QMessageBox.question(
+                self, '未保存的录制 / Unsaved recording',
+                '是否保存当前录制后退出？\nSave the current recording before closing?',
+                QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel,
+                QMessageBox.Save,
+            )
+            if choice == QMessageBox.Cancel:
+                event.ignore()
+                return
+            if choice == QMessageBox.Save and not self.recordMethod():
+                event.ignore()
+                return
         self._closing = True
         if self.runthread and self.runthread.isRunning():
             self.runthread.stop()
@@ -573,6 +591,7 @@ class UIFunc(QMainWindow, Ui_UIView, QtStyleTools):
         self.resize(700, 490 if self.log_toggle.isChecked() else 310)
 
     def _update_log_toggle(self):
+        self.setWindowTitle(f'KeymouseGo v{__version__}')
         english = self.choice_language.currentText() == 'English'
         traditional = self.choice_language.currentText() == '繁體中文'
         self.log_toggle.setText(('Hide log' if english else '收起日誌' if traditional else '收起日志')
@@ -667,8 +686,35 @@ class UIFunc(QMainWindow, Ui_UIView, QtStyleTools):
     def recordMethod(self):
         if self.state == State.RECORDING or self.state == State.PAUSE_RECORDING:
             logger.info('Record stop')
-            with open(self.new_script_path(), 'w', encoding='utf-8') as f:
-                json5.dump({"scripts": self.record}, indent=2, ensure_ascii=False, fp=f)
+            script = datetime.datetime.now().strftime('%Y%m%d_%H%M%S_%f.json5')
+            target = to_abs_path('scripts', script)
+            temporary = None
+            try:
+                # Never expose a partial script or clear the in-memory recording
+                # when a disk write fails.
+                with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8',
+                        dir=to_abs_path('scripts'), suffix='.tmp', delete=False) as f:
+                    temporary = f.name
+                    json5.dump({"scripts": self.record}, indent=2, ensure_ascii=False, fp=f)
+                    f.flush()
+                    os.fsync(f.fileno())
+                os.replace(temporary, target)
+            except (OSError, TypeError, ValueError) as exc:
+                logger.exception('Could not save recording')
+                self.update_state(State.PAUSE_RECORDING)
+                self.btpauserecord.setText('继续 / Continue')
+                self.statusbar.showMessage('保存失败，录制仍保留在内存中 / Save failed: ' + str(exc))
+                return False
+            finally:
+                if temporary and os.path.exists(temporary):
+                    try:
+                        os.unlink(temporary)
+                    except OSError:
+                        pass
+            self.scripts.insert(0, script)
+            update_script_map()
+            self.choice_script.clear()
+            self.choice_script.addItems(self.scripts)
             self.btrecord.setText(QCoreApplication.translate("UIView", 'Record', None))
             self.tnumrd.setText('finished')
             self.record = []
@@ -676,6 +722,7 @@ class UIFunc(QMainWindow, Ui_UIView, QtStyleTools):
             self.choice_script.setCurrentIndex(0)
             self.btpauserecord.setText(QCoreApplication.translate("UIView", 'Pause Record', None))
             self.update_state(State.IDLE)
+            return True
         elif self.state == State.IDLE:
             logger.info('Record start')
             self.textlog.clear()
@@ -687,10 +734,17 @@ class UIFunc(QMainWindow, Ui_UIView, QtStyleTools):
             self.record = []
             self._record_first_event = True
             self.update_state(State.RECORDING)
+            return True
 
     def OnBtrecordButton(self):
-        if self.state == State.RECORDING or self.state == State.PAUSE_RECORDING:
-            self.record = self.record[:-2]
+        # While paused no Finish click was recorded. Also do not discard real
+        # keyboard events when the button is activated using the keyboard.
+        if self.state == State.RECORDING and len(self.record) >= 2 and self.btrecord.underMouse():
+            down, up = self.record[-2:]
+            if (down.get('event_type') == up.get('event_type') == 'EM'
+                    and down.get('action_type') == 'mouse left down'
+                    and up.get('action_type') == 'mouse left up'):
+                self.record = self.record[:-2]
         self.recordMethod()
 
     def OnBtrunButton(self):

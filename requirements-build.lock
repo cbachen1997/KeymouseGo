@@ -1,0 +1,22 @@
+# Windows x64 / Python 3.11. Validated local runtime and build dependencies.
+altgraph==0.17.5
+colorama==0.4.6
+future==1.0.0
+Jinja2==3.1.6
+json5==0.9.10
+loguru==0.6.0
+MarkupSafe==3.0.3
+packaging==26.3
+pefile==2024.8.26
+pyinstaller==6.22.3
+pyinstaller-hooks-contrib==2026.7
+pyperclip==1.11.0
+PySide6==6.5.3
+PySide6-Addons==6.5.3
+PySide6-Essentials==6.5.3
+pywin32==312
+pywin32-ctypes==0.2.3
+pyWinhook==1.6.2
+qt-material==2.11
+shiboken6==6.5.3
+win32_setctime==1.2.0

@@ -26,6 +26,8 @@
 
 功能：记录用户的鼠标键盘操作，通过触发按钮自动执行之前记录的操作，可设定执行的次数，可以理解为 `精简绿色版` 的 `按键精灵`。
 
+当前维护版本：**v5.2.2**。正式程序位于本项目 `release/KeymouseGo.exe`，配置、录制脚本和插件仍保留在其旁边。构建使用 Python 3.11 和 `requirements-build.lock`，运行 `packaging/build-windows.ps1` 会先验证再发布；失败不会替换正式版本。`release-info.json` 记录源码提交、校验值及自检结果。测试不向其他软件发送真实键鼠输入。
+
 用途：在进行某些操作简单、单调重复的工作时，使用本软件就可以很省力了。自己只要做一遍，然后接下来就让电脑来做。
 
 
@@ -63,7 +65,7 @@
 
 Windows 打包使用 `packaging/windows.spec` 精简未使用的 Qt 组件，保留内置主题、翻译及提示音。
 如果已有本地 `build/venv311` 环境，也可以直接运行 `./packaging/build-windows.ps1`。
-可添加 `-PublishTo 'F:\PersonalDev\KeymouseGo.exe'` 发布到指定位置，**该参数会覆盖目标文件**。
+先创建项目内的 `release` 文件夹，再添加 `-PublishTo '.\release\KeymouseGo.exe'` 发布到该目录，**该参数会覆盖目标文件**。正式 EXE 及其配置、脚本、插件和日志统一放在 `release` 内，不放到外层工作区。
 构建复用 `build/release`，不会每次新建一套缓存。第三方插件如依赖被排除的 Qt 模块，需要另行调整打包配置。
 
 回归检查：`python -m unittest discover -s tests -v`（Windows，模拟输入，不操作其他应用）。

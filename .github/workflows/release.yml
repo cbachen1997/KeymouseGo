@@ -10,30 +10,29 @@ permissions:
   contents: read
 
 env:
-  keymousego-version: _v5_2_1
-  tag_name: v5.2.1
+  keymousego-version: _v5_2_2
+  tag_name: v5.2.2
 
 jobs:
   build-windows:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@main
-      - name: Set up Python 3.10
-        uses: actions/setup-python@main
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
+          python-version: "3.11"
       - name: Install dependencies
         run: |
-          pip3 install -r requirements-windows.txt
-          pip3 install pyinstaller
+          pip3 install -r requirements-build.lock
       - name: Bundle Packages
         run: |
           ./packaging/build-windows.ps1 -Python (Get-Command python).Source
       - name: Copy artifact
         run: |
-          mkdir artifact && mv dist/KeymouseGo.exe ./artifact/KeymouseGo${{ env.keymousego-version }}-win.exe
+          mkdir artifact && mv release/KeymouseGo.exe ./artifact/KeymouseGo${{ env.keymousego-version }}-win.exe
       - name: Artifact
-        uses: actions/upload-artifact@main
+        uses: actions/upload-artifact@v4
         with:
           name: windows
           path: ${{ github.workspace }}/artifact/
@@ -48,9 +47,9 @@ jobs:
   build-linux:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@main
+      - uses: actions/checkout@v4
       - name: Set up Python 3.10
-        uses: actions/setup-python@main
+        uses: actions/setup-python@v5
         with:
           python-version: "3.10.16"
       - name: Install dependencies
@@ -64,7 +63,7 @@ jobs:
         run: |
           mkdir artifact && mv dist/KeymouseGo ./artifact/KeymouseGo${{ env.keymousego-version }}-linux
       - name: Artifact
-        uses: actions/upload-artifact@main
+        uses: actions/upload-artifact@v4
         with:
           name: linux
           path: ${{ github.workspace }}/artifact/
@@ -79,9 +78,9 @@ jobs:
   build-linux-arm64:
     runs-on: ubuntu-24.04-arm
     steps:
-      - uses: actions/checkout@main
+      - uses: actions/checkout@v4
       - name: Set up Python 3.10
-        uses: actions/setup-python@main
+        uses: actions/setup-python@v5
         with:
           python-version: "3.10.16"
       - name: Install dependencies
@@ -95,7 +94,7 @@ jobs:
         run: |
           mkdir artifact && mv dist/KeymouseGo ./artifact/KeymouseGo${{ env.keymousego-version }}-linux-aarch64
       - name: Artifact
-        uses: actions/upload-artifact@main
+        uses: actions/upload-artifact@v4
         with:
           name: linux-aarch64
           path: ${{ github.workspace }}/artifact/
@@ -110,9 +109,9 @@ jobs:
   build-macos:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@main
+      - uses: actions/checkout@v4
       - name: Set up Python 3.10
-        uses: actions/setup-python@main
+        uses: actions/setup-python@v5
         with:
           python-version: "3.10.11"
       - name: Install dependencies
@@ -126,7 +125,7 @@ jobs:
         run: |
           mkdir artifact && mv dist/KeymouseGo.app ./artifact/KeymouseGo${{ env.keymousego-version }}-mac
       - name: Artifact
-        uses: actions/upload-artifact@main
+        uses: actions/upload-artifact@v4
         with:
           name: macos
           path: ${{ github.workspace }}/artifact/
