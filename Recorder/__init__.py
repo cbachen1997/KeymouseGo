@@ -4,7 +4,7 @@ import Recorder.globals
 
 if system() == 'Windows':
     import Recorder.WindowsRecorder as _Recorder
-    _Recorder.globalv.key_combination_trigger = ['lwin', 'lshift', 'rshift', 'lcontrol', 'rcontrol', 'lmenu', 'rmenu']
+    _Recorder.globalv.key_combination_trigger = ['lwin', 'rwin', 'lshift', 'rshift', 'lcontrol', 'rcontrol', 'lmenu', 'rmenu']
 elif system() in ['Linux', 'Darwin']:
     import Recorder.UniversalRecorder as _Recorder
     _Recorder.globalv.key_combination_trigger = ['win', 'shiftright', 'shift', 'ctrlright', 'ctrl', 'altright', 'alt']
@@ -21,7 +21,13 @@ def set_cursor_pose_change(callback):
     _Recorder.record_signals.cursor_pos_change.connect(callback)
 
 def dispose():
-    _Recorder.record_signals.event_signal.disconnect()
+    if hasattr(_Recorder, 'dispose'):
+        _Recorder.dispose()
+    for signal in (_Recorder.record_signals.event_signal, _Recorder.record_signals.cursor_pos_change):
+        try:
+            signal.disconnect()
+        except RuntimeError:
+            pass
 
 
 # 槽函数:改变鼠标精度

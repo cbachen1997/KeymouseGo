@@ -19,7 +19,8 @@ class Event(metaclass=ABCMeta):
 
     # 延时
     def sleep(self, thd):
-        thd.sleep(self.delay)
+        if thd is not None:
+            thd.sleep(self.delay)
 
     @abstractmethod
     def execute(self, thd=None):

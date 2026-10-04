@@ -63,13 +63,23 @@ This program is written in `Python` and packed as executable file. You can downl
 3. Install pyinstaller
 -  pip install pyinstaller
 4. Bundle with pyinstaller
-- (Windows) pyinstaller -F -w --add-data "./assets;assets" KeymouseGo.py
+- (Windows PowerShell) ./packaging/build-windows.ps1 -Python (Get-Command python).Source
 - (Linux X11) pyinstaller -F -w --add-data "./assets:assets" --hidden-import "pynput.keyboard._xorg" --hidden-import "pynput.mouse._xorg" KeymouseGo.py
 - (Linux Wayland) pyinstaller -F -w --add-data "./assets:assets"  --hidden-import "pynput.keyboard._uinput" --hidden-import "pynput.mouse._uinput" KeymouseGo.py
 - (MacOS) pyinstaller -F -w --add-data "./assets:assets" --hidden-import "pynput.keyboard._darwin" --hidden-import "pynput.mouse._darwin" KeymouseGo.py
 ```
 
 The executable program would appear at folder `your_poject_location/dist`.
+
+The Windows spec removes unused Qt components while retaining built-in themes, translations and WAV notifications.
+Use `-PublishTo <path>` to copy the executable to a chosen location (overwrites that file).
+Builds reuse `build/release`. Third-party plugins requiring excluded Qt modules need an adjusted spec.
+Run Windows regression tests with `python -m unittest discover -s tests -v`.
+The explicit `KeymouseGo.exe --self-test <output-directory>` command uses isolated configuration for a GUI/package smoke check; the theme library may write its user-level icon cache.
+
+The log panel is collapsed by default and can be expanded. Displayed logs are capped at 500 lines; disk logs rotate at 2 MB with five archived files retained.
+Portable data is stored beside the executable, so use a writable folder. Source files and the build environment are not needed to run the EXE.
+Relative subroutine paths are resolved from the calling script's directory.
 
 # Usage
 
@@ -112,7 +122,7 @@ Run specific script for 3 times
 
 6. The content of script can be edited with reference of `Grammar of script`.
 
-7. In hotkey setting, `Middle` refers mouse middle button and `XButton` refers mouse side button.
+7. Click the button showing the current hotkey, then press a new key or key combination to change it. Press `Esc` to cancel or `Delete` to clear it. In hotkey setting, `Middle` refers mouse middle button and `XButton` refers mouse side button.
 
 8. Due to the limitation of execution speed, the running speed cannot be set too high.
 
@@ -182,8 +192,6 @@ Thanks to free develop tool provided by JetBrains
 <a href="https://www.jetbrains.com/?from=KeymouseGo"><img src="https://raw.githubusercontent.com/taojy123/KeymouseGo/master/jetbrains-variant-2.png" height="80"></a>
 
 ----------------------
-
-
 
 
 

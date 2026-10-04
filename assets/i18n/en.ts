@@ -182,5 +182,25 @@
         <translatorcomment>Pause</translatorcomment>
         <translation>Pause</translation>
     </message>
+    <message>
+        <source>Press a key or key combination. Esc cancels; Delete clears.</source>
+        <translation>Press a key or key combination. Esc cancels; Delete clears.</translation>
+    </message>
+    <message>
+        <source>Hotkey change cancelled.</source>
+        <translation>Hotkey change cancelled.</translation>
+    </message>
+    <message>
+        <source>Hotkey cleared.</source>
+        <translation>Hotkey cleared.</translation>
+    </message>
+    <message>
+        <source>That hotkey is already in use.</source>
+        <translation>That hotkey is already in use.</translation>
+    </message>
+    <message>
+        <source>Hotkey saved.</source>
+        <translation>Hotkey saved.</translation>
+    </message>
 </context>
 </TS>

@@ -53,13 +53,22 @@
 3. pip安装pyinstaller
 -  pip install pyinstaller
 4. pyinstaller打包
-- (Windows) pyinstaller -F -w --add-data "./assets;assets" KeymouseGo.py
+- (Windows PowerShell) ./packaging/build-windows.ps1 -Python (Get-Command python).Source
 - (Linux X11) pyinstaller -F -w --add-data "./assets:assets" --hidden-import "pynput.keyboard._xorg" --hidden-import "pynput.mouse._xorg" KeymouseGo.py
 - (Linux Wayland) pyinstaller -F -w --add-data "./assets:assets"  --hidden-import "pynput.keyboard._uinput" --hidden-import "pynput.mouse._uinput" KeymouseGo.py
 - (MacOS) pyinstaller -F -w --add-data "./assets:assets" --hidden-import "pynput.keyboard._darwin" --hidden-import "pynput.mouse._darwin" KeymouseGo.py
 ```
 
 打包完成后，可执行文件在项目路径的`dist`文件夹内。
+
+Windows 打包使用 `packaging/windows.spec` 精简未使用的 Qt 组件，保留内置主题、翻译及提示音。
+如果已有本地 `build/venv311` 环境，也可以直接运行 `./packaging/build-windows.ps1`。
+可添加 `-PublishTo 'F:\PersonalDev\KeymouseGo.exe'` 发布到指定位置，**该参数会覆盖目标文件**。
+构建复用 `build/release`，不会每次新建一套缓存。第三方插件如依赖被排除的 Qt 模块，需要另行调整打包配置。
+
+回归检查：`python -m unittest discover -s tests -v`（Windows，模拟输入，不操作其他应用）。
+EXE 自检：`KeymouseGo.exe --self-test <输出目录>`（隔离配置，验证界面、主题、热键保存、钩子及提示音；主题库会使用用户目录缓存）。
+检查结果与后续建议见 [本地检查报告](AUDIT-2026-10-04.md)。
 
 # 使用方法
 
@@ -94,15 +103,15 @@
 
 2、默认启动热键为 `F6`，功能等同于 `启动` 按钮；默认终止热键为 `F9`，按下后将会停止正在运行的脚本。
 
-3、录制时只记录鼠标点击动作和键盘动作，不记录鼠标移动轨迹。
+3、支持录制鼠标点击、滚轮、键盘及鼠标移动轨迹。`鼠标精度` 表示移动采样间隔（毫秒），越小动作越密集、脚本越大；设为 `0` 可关闭轨迹录制。
 
-4、每次录制结束后都会在 `scripts` 目前下生成一个新的脚本文件。
+4、每次录制结束后都会在 `scripts` 目录下生成一个新的脚本文件。
 
 5、运行前可以在列表中选择一个需要执行的脚本。
 
 6、`scripts` 下的脚本文件内容可以修改，修改时可参考如下所述 `脚本格式说明`。
 
-7、热键设置中的`Middle`指代鼠标中键，`XButton`指代鼠标侧键
+7、点击热键右侧显示当前按键的按钮，然后按下新的按键或组合键即可修改热键；按 `Esc` 取消，按 `Delete` 清空。设置中的`Middle`指代鼠标中键，`XButton`指代鼠标侧键
 
 8、由于程序速度受限，当输入的鼠标速度大于一定值时脚本将无法以预期的输入速度执行
 
@@ -116,6 +125,11 @@ chmod -R 770 ~/.qt_material
 11、对于Linux/Mac用户，如果在以管理员身份运行后仍然存在无法录制或执行的问题，可以参考[pynput的文档](https://pynput.readthedocs.io/en/latest/limitations.html)
 
 ## 脚本语法说明
+
+窗口默认收起日志，点击 `显示日志` 展开。界面最多保留 500 行日志；磁盘日志按 2 MB 轮转、保留 5 份归档。
+Windows 便携版的配置、脚本、插件和日志均位于 EXE 同级目录，请放在可写文件夹中；仅运行 EXE 不需要源码和 `build` 开发环境。
+子脚本的相对路径以调用它的脚本所在目录为基准，例如同目录子脚本使用 `child.json5`。
+
 > 演示屏幕分辨率为`1920 * 1080`
 
 脚本为 `json5` 格式，每个最内层的jsonobject代表一个事件

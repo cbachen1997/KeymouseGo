@@ -76,6 +76,10 @@ class WindowsEvent(Event):
                 win32api.mouse_event(win32con.MOUSEEVENTF_MIDDLEDOWN, 0, 0, 0, 0)
             elif self.action_type == 'mouse middle up':
                 win32api.mouse_event(win32con.MOUSEEVENTF_MIDDLEUP, 0, 0, 0, 0)
+            elif self.action_type in ('mouse x1 down', 'mouse x2 down', 'mouse x1 up', 'mouse x2 up'):
+                button = 1 if 'x1' in self.action_type else 2
+                flag = win32con.MOUSEEVENTF_XDOWN if self.action_type.endswith('down') else win32con.MOUSEEVENTF_XUP
+                win32api.mouse_event(flag, 0, 0, button, 0)
             elif self.action_type == 'mouse wheel up':
                 win32api.mouse_event(win32con.MOUSEEVENTF_WHEEL, 0, 0, win32con.WHEEL_DELTA, 0)
             elif self.action_type == 'mouse wheel down':

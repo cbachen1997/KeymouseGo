@@ -28,7 +28,7 @@ jobs:
           pip3 install pyinstaller
       - name: Bundle Packages
         run: |
-          pyinstaller -Fw --icon=Mondrian.ico --add-data './assets;assets' KeymouseGo.py
+          ./packaging/build-windows.ps1 -Python (Get-Command python).Source
       - name: Copy artifact
         run: |
           mkdir artifact && mv dist/KeymouseGo.exe ./artifact/KeymouseGo${{ env.keymousego-version }}-win.exe

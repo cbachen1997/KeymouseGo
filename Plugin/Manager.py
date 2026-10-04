@@ -6,11 +6,7 @@ from Plugin.Interface import PluginInterface
 from Util.Parser import JsonObject
 from importlib.machinery import SourceFileLoader
 import json5
-
-
-def to_abs_path(*args):
-    return os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])),
-                        *args)
+from Util.Paths import to_abs_path
 
 
 class PluginManager:
@@ -70,14 +66,12 @@ class PluginManager:
         # logger.info(f'Additional Resources: {PluginManager.resources_paths}')
 
     @staticmethod
-    @logger.catch
     def call(function_name: str, json_object: JsonObject):
         func = PluginManager.functions.get(function_name, None)
         if func:
             return func(json_object)
         else:
-            logger.error(f'Cannot find function {function_name} in registered plugins')
-            return None
+            raise LookupError(f'Cannot find function {function_name} in registered plugins')
 
     @staticmethod
     def call_group(function_group: List[str], json_object: JsonObject):

@@ -23,6 +23,7 @@ datadic = {0x10000: 'x1', 0x20000: 'x2'}
 MyMouseEvent = collections.namedtuple("MyMouseEvent", ["MessageName"])
 
 record_signals = globalv.RecordSignal()
+_hook_manager = None
 
 from pyWinhook.HookManager import KeyboardEvent
 
@@ -88,6 +89,8 @@ def get_mouse_event(event):
 
 
 def get_keyboard_event(event):
+    if getattr(event, 'Injected', False):
+        return True
     # print('MessageName:',event.MessageName)          #同上，共同属性不再赘述
     # print('Message:',event.Message)
     # print('Time:',event.Time)
@@ -132,6 +135,8 @@ def get_keyboard_event(event):
 
 
 def mouse_handler(msg, x, y, data, flags, time, hwnd, window_name):
+    if flags & 1:
+        return True
     try:
         name = msgdic[msg]
         if name == 'mouse wheel':
@@ -151,7 +156,10 @@ def register_hm():
 
 # @threadwrapper
 def setuphook(commandline=False):
+    global _hook_manager
+    dispose()
     hm = pyWinhook.HookManager()
+    _hook_manager = hm
     if not commandline:
         # 使用一般的HookMouse无法捕获鼠标侧键操作，因此采用cpyHook捕获鼠标操作
         cpyHook.cSetHook(HookConstants.WH_MOUSE_LL, mouse_handler)
@@ -159,3 +167,11 @@ def setuphook(commandline=False):
     hm.HookKeyboard()
     # Wait Forever
     # pythoncom.PumpMessages()
+
+
+def dispose():
+    global _hook_manager
+    if _hook_manager is not None:
+        _hook_manager.UnhookKeyboard()
+        cpyHook.cUnhook(HookConstants.WH_MOUSE_LL)
+        _hook_manager = None

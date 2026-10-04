@@ -182,5 +182,25 @@
         <translatorcomment>暫停錄製</translatorcomment>
         <translation>暫停錄製</translation>
     </message>
+    <message>
+        <source>Press a key or key combination. Esc cancels; Delete clears.</source>
+        <translation>請按下新的按鍵或組合鍵。Esc 取消；Delete 清空。</translation>
+    </message>
+    <message>
+        <source>Hotkey change cancelled.</source>
+        <translation>已取消修改熱鍵。</translation>
+    </message>
+    <message>
+        <source>Hotkey cleared.</source>
+        <translation>熱鍵已清空。</translation>
+    </message>
+    <message>
+        <source>That hotkey is already in use.</source>
+        <translation>該熱鍵已被使用，請選擇其他熱鍵。</translation>
+    </message>
+    <message>
+        <source>Hotkey saved.</source>
+        <translation>熱鍵已儲存。</translation>
+    </message>
 </context>
 </TS>
